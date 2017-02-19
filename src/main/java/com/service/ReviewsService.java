@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +49,7 @@ public class ReviewsService {
             apps.setId(vo.getApp());
             long count = appsRepository.count(Example.of(apps));
             if (count == 0) {
-                apps.setEnabled(true);
+                apps.setEnabled(false);
                 apps.setName("");
                 apps.setIphone(false);
                 apps.setIpad(false);
@@ -55,8 +58,23 @@ public class ReviewsService {
             } else {
                 LOGGER.info("do nothing.appId:{} already exists.", vo.getApp());
             }
+
+            //触发调用爬虫:最好是个异步的
+//            http://127.0.0.1:9000/crawler?appid=963065779
+            try {
+                URL url = new URL("http://127.0.0.1:9000/crawler?appid=" + apps.getId());
+
+                URLConnection rulConnection = url.openConnection();
+                HttpURLConnection httpUrlConnection = (HttpURLConnection) rulConnection;
+                httpUrlConnection.setRequestMethod("GET");
+                httpUrlConnection.connect();
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+
             return newArrayList();
         }
+
         List<ReviewsRes> resList = new ArrayList<>(reviewsList.size());
         for (Reviews reviews : reviewsList) {
             ReviewsRes res = new ReviewsRes();

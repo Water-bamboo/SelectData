@@ -12,7 +12,7 @@ logging:
   level:
       root: info
 server:
-  port: 80
+  port: 8081
 spring:
   profiles:
       active: dev,swagger,actuator
