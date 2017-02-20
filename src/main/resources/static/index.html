@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script src="jquery-1.11.3.min.js" type="text/javascript"></script>
+    <script src="bootstrap-2.3.2/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="jquery.dynatable.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="bootstrap-2.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="jquery.dynatable.css" />
+</head>
+
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <div class="nav-collapse collapse">
+                    <ul class="nav">
+                        <li class="active">
+                            <a href="#">您好，游荡的用户</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <header style="padding:40px;">
+        <div class="container">
+            <h1>Appstore Reviews</h1>
+
+            <form class="bs-example bs-example-form" role="form" id="searchApp">
+
+                <div class="input-group">
+                  <input type="text" class="form-control" placeholder="AppId">
+                  <button onclick="getdata()">搜索</button>
+                </div>
+
+            </form>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row">
+            <div class="span12">
+                <div class="pull-left">
+                    Version:
+                    <select id="search-version" name="version" data-dynatable-query='version' class="inline">
+                    </select>
+                </div>
+                <table id="my-final-table" class="table table-bordered" style="table-layout:fixed;word-wrap:break-word;">
+                    <thead>
+                        <th style="width:70px;">Rate</th>
+                        <th style="width:150px;">Title</th>
+                        <th>Comment</th>
+                        <th style="width:70px;">Author</th>
+                        <th style="width:100px;">Version</th>
+                        <th style="width:100px;">Country</th>
+                        <th style="width:100px;">retrieved_date</th>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        function getdata() {
+            //alert("asdf");
+            // $.get({
+            //    url: 'http://127.0.0.1:9000/getReviews?app=963065779',
+            //     success: function (data) {
+            //         alert("got");
+            //         $('#my-final-table').dynatable({
+            //             features: {
+            //                 recordCount: true
+            //             },
+            //             dataset: {
+            //                 records: data
+            //             },
+            //             inputs: {
+            //                 queries: $('#search-version'),
+            //             }
+            //         });
+            //     }
+            // });
+
+            $.get('http://127.0.0.1:9000/getReviews?app=963065779',
+                function (data) {
+                    alert("got");
+                    $('#my-final-table').dynatable({
+                        features: {
+                            recordCount: true
+                        },
+                        dataset: {
+                            records: data
+                        },
+                        inputs: {
+                            queries: $('#search-version'),
+                        }
+                    });
+                });
+        }
+
+        // $(document).ready(function () {
+            // $.ajax({
+            //     url: 'http://127.0.0.1:9000/getReviews?app=963065779',
+            //     success: function (data) {
+            //         $('#my-final-table').dynatable({
+            //             features: {
+            //                 recordCount: true
+            //             },
+            //             dataset: {
+            //                 records: data
+            //             },
+            //             inputs: {
+            //                 queries: $('#search-version'),
+            //             }
+            //         });
+            //     }
+            // });
+            // $.ajax({
+            //     url: 'http://127.0.0.1:9000/getVersions?app=963065779',
+            //     success: function (data) {
+            //         $("#search-version").html("<option value=''>-----</option>");
+            //         for (var i = 0; i < data.length; i++) {
+            //             $("#search-version").append("<option>" + data[i].version + "</option>");
+            //         }
+            //     }
+            // });
+        // });
+    </script>
+</body>
+
+</html>
