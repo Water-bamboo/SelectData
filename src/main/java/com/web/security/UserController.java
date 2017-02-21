@@ -8,7 +8,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -33,7 +32,6 @@ public class UserController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
     @RequestMapping(value = "/user", method = RequestMethod.POST)
     @ApiImplicitParam(name = "测试字段不用填", value = "username value", defaultValue = "admin", required = true, paramType = "query", example = "eg")
     public ResponseEntity<String> createUser(@Valid @ModelAttribute FullUserReq fullUserReq) {
@@ -41,7 +39,6 @@ public class UserController {
         return ResponseEntity.ok("success");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @RequestMapping(value = "/user", method = RequestMethod.PUT)
     public ResponseEntity<String> managerUser(@RequestParam(name = "username") String username, @RequestParam("status") Boolean status) {
         //todo 此处的用户名，token中已经存在，可以去掉

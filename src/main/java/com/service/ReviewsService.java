@@ -61,16 +61,16 @@ public class ReviewsService {
 
             //触发调用爬虫:最好是个异步的
 //            http://127.0.0.1:9000/crawler?appid=963065779
-            try {
-                URL url = new URL("http://127.0.0.1:9000/crawler?appid=" + apps.getId());
-
-                URLConnection rulConnection = url.openConnection();
-                HttpURLConnection httpUrlConnection = (HttpURLConnection) rulConnection;
-                httpUrlConnection.setRequestMethod("GET");
-                httpUrlConnection.connect();
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
-            }
+//            try {
+//                URL url = new URL("http://127.0.0.1:9000/crawler?appid=" + apps.getId());
+//
+//                URLConnection rulConnection = url.openConnection();
+//                HttpURLConnection httpUrlConnection = (HttpURLConnection) rulConnection;
+//                httpUrlConnection.setRequestMethod("GET");
+//                httpUrlConnection.connect();
+//            } catch (Exception e) {
+//                LOGGER.error(e.getMessage(), e);
+//            }
 
             return newArrayList();
         }

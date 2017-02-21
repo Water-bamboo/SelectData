@@ -1,16 +1,11 @@
 package com.service.security;
 
 import com.domain.request.FullUserReq;
-import com.domain.security.SysUser;
-import com.domain.security.UserAuthorityRepository;
-import com.domain.security.UserRepository;
-import com.domain.security.SysRole;
-import com.domain.security.SysUserAuthority;
 import com.domain.request.UserReq;
+import com.domain.security.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -29,8 +24,6 @@ public class UserManagerService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     /**
      * 第一个创建的一定是管理员
@@ -46,7 +39,7 @@ public class UserManagerService {
     public void create(UserReq req, Number authorityId) {
         SysUser sysUser = new SysUser();
         sysUser.setUsername(req.getUsername());
-        String encodePwd = passwordEncoder.encode(req.getPassword());
+        String encodePwd = req.getPassword();
         LOGGER.info("{}", encodePwd);
         sysUser.setPassword(encodePwd);
         sysUser.setFirstName(req.getFirstName());

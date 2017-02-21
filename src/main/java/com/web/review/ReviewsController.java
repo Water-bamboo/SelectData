@@ -18,6 +18,7 @@ import java.util.List;
  * Created by tangcheng on 2017/2/18.
  */
 @RestController
+@RequestMapping(value = "v1")
 public class ReviewsController {
 
     @Autowired
