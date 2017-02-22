@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * Created by tangcheng on 2017/2/18.
@@ -48,7 +48,11 @@ public class ReviewsService {
     }
 
     public Map<String, Object> getReviews(ReviewsReq vo) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("current", vo.getCurrent());
+        map.put("rowCount", vo.getRowCount());
         Page<Reviews> page;
+        List<Reviews> content = newArrayList();
         String searchPhrase = vo.getSearchPhrase();
         if (StringUtils.hasText(searchPhrase)) {
             long app;
@@ -83,22 +87,24 @@ public class ReviewsService {
                         public void run() {
                             String url = "http://127.0.0.1:9000/crawler?appid=" + apps.getId();
                             String forObject = restTemplate.getForObject(URI.create(url), String.class);
-                            LOGGER.info("result:{},appId:{}", forObject, apps.getId());
+                            LOGGER.info("invoke spider result:{},appId:{}", forObject, apps.getId());
                         }
                     });
                     thread.start();
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage(), e);
                 }
-                return newHashMap();
             }
+            map.put("total", 0);
         } else {
             Pageable all = new PageRequest(vo.getPageId(), vo.getRowCount(), new Sort(Sort.Direction.DESC, "retrievedDate"));
             page = reviewsRepository.findAll(all);
+            content = page.getContent();
+            map.put("total", page.getTotalElements());
         }
 
-        List<ReviewsRes> resList = new ArrayList<>(page.getContent().size());
-        for (Reviews reviews : page.getContent()) {
+        List<ReviewsRes> resList = new ArrayList<>(content.size());
+        for (Reviews reviews : content) {
             ReviewsRes res = new ReviewsRes();
             BeanUtils.copyProperties(reviews, res);
             res.setRetrievedDate(reviews.getRetrievedDate().getTime());
@@ -125,11 +131,8 @@ public class ReviewsService {
          "total": 1123
          }
          */
-        Map<String, Object> map = new HashMap<>();
-        map.put("current", vo.getCurrent());
-        map.put("rowCount", vo.getRowCount());
+
         map.put("rows", resList);
-        map.put("total", page.getTotalElements());
 
         return map;
     }
