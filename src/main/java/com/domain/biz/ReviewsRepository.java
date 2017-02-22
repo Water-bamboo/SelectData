@@ -12,5 +12,5 @@ import java.util.List;
 public interface ReviewsRepository extends JpaRepository<Reviews, Long> {
     List<Reviews> findByApp(Long app);
 
-    List<Reviews> findByAppOrderByRetrievedDateDesc(Long app);
+    Page<Reviews> findByAppOrderByRetrievedDateDesc(Long app, Pageable pageable);
 }

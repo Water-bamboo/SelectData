@@ -5,16 +5,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
 
 /**
  * Created by tangcheng on 2017/2/18.
@@ -30,8 +32,11 @@ public class ReviewsService {
     @Autowired
     private AppsRepository appsRepository;
 
-    public List<String> getVersions(ReviewsReq vo) {
-        List<Reviews> reviewsList = reviewsRepository.findByApp(vo.getApp());
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public List<String> getVersions(Long app) {
+        List<Reviews> reviewsList = reviewsRepository.findByApp(app);
         List<String> list = new ArrayList<>(reviewsList.size());
         for (Reviews reviews : reviewsList) {
             if (list.contains(reviews.getVersion())) {
@@ -42,46 +47,90 @@ public class ReviewsService {
         return list;
     }
 
-    public List<ReviewsRes> getReviews(ReviewsReq vo) {
-        List<Reviews> reviewsList = reviewsRepository.findByAppOrderByRetrievedDateDesc(vo.getApp());
-        if (reviewsList.isEmpty()) {
-            Apps apps = new Apps();
-            apps.setId(vo.getApp());
-            long count = appsRepository.count(Example.of(apps));
-            if (count == 0) {
-                apps.setEnabled(false);
-                apps.setName("");
-                apps.setIphone(false);
-                apps.setIpad(false);
-                apps.setOsx(false);
-                appsRepository.saveAndFlush(apps);
-            } else {
-                LOGGER.info("do nothing.appId:{} already exists.", vo.getApp());
+    public Map<String, Object> getReviews(ReviewsReq vo) {
+        Page<Reviews> page;
+        String searchPhrase = vo.getSearchPhrase();
+        if (StringUtils.hasText(searchPhrase)) {
+            long app;
+            try {
+                app = Long.parseLong(searchPhrase);
+            } catch (Exception e) {
+                LOGGER.info("searchPhrase:{}", searchPhrase);
+                throw new IllegalArgumentException("invalid appId");
             }
+            Pageable pageable = new PageRequest(vo.getPageId(), vo.getRowCount());
+            page = reviewsRepository.findByAppOrderByRetrievedDateDesc(app, pageable);
+            if (vo.getPageId() == 0 && !page.hasContent()) {
+                Apps apps = new Apps();
+                apps.setId(app);
+                long count = appsRepository.count(Example.of(apps));
+                if (count == 0) {
+                    apps.setEnabled(false);
+                    apps.setName("");
+                    apps.setIphone(false);
+                    apps.setIpad(false);
+                    apps.setOsx(false);
+                    appsRepository.saveAndFlush(apps);
+                } else {
+                    LOGGER.info("do nothing.appId:{} already exists.", app);
+                }
 
-            //触发调用爬虫:最好是个异步的
+                //触发调用爬虫
 //            http://127.0.0.1:9000/crawler?appid=963065779
-//            try {
-//                URL url = new URL("http://127.0.0.1:9000/crawler?appid=" + apps.getId());
-//
-//                URLConnection rulConnection = url.openConnection();
-//                HttpURLConnection httpUrlConnection = (HttpURLConnection) rulConnection;
-//                httpUrlConnection.setRequestMethod("GET");
-//                httpUrlConnection.connect();
-//            } catch (Exception e) {
-//                LOGGER.error(e.getMessage(), e);
-//            }
-
-            return newArrayList();
+                try {
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String url = "http://127.0.0.1:9000/crawler?appid=" + apps.getId();
+                            String forObject = restTemplate.getForObject(URI.create(url), String.class);
+                            LOGGER.info("result:{},appId:{}", forObject, apps.getId());
+                        }
+                    });
+                    thread.start();
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+                return newHashMap();
+            }
+        } else {
+            Pageable all = new PageRequest(vo.getPageId(), vo.getRowCount(), new Sort(Sort.Direction.DESC, "retrievedDate"));
+            page = reviewsRepository.findAll(all);
         }
 
-        List<ReviewsRes> resList = new ArrayList<>(reviewsList.size());
-        for (Reviews reviews : reviewsList) {
+        List<ReviewsRes> resList = new ArrayList<>(page.getContent().size());
+        for (Reviews reviews : page.getContent()) {
             ReviewsRes res = new ReviewsRes();
             BeanUtils.copyProperties(reviews, res);
             res.setRetrievedDate(reviews.getRetrievedDate().getTime());
             resList.add(res);
         }
-        return resList;
+
+        /**
+         * {
+         "current": 1,
+         "rowCount": 10,
+         "rows": [
+         {
+         "id": 19,
+         "sender": "123@test.de",
+         "received": "2014-05-30T22:15:00"
+         },
+         {
+         "id": 14,
+         "sender": "123@test.de",
+         "received": "2014-05-30T20:15:00"
+         },
+         ...
+         ],
+         "total": 1123
+         }
+         */
+        Map<String, Object> map = new HashMap<>();
+        map.put("current", vo.getCurrent());
+        map.put("rowCount", vo.getRowCount());
+        map.put("rows", resList);
+        map.put("total", page.getTotalElements());
+
+        return map;
     }
 }
