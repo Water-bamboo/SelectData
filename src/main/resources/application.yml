@@ -1,12 +1,3 @@
-
-jwt:
-  secret: selectData
-  expiration: 604800
-  route:
-    authentication:
-      path: auth
-      refresh: refresh
-
 logging:
   file: logs/selectdata.log
   level:

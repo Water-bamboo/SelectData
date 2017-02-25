@@ -3,3 +3,7 @@ endpoints:
   shutdown:
     enabled: true
     sensitive: false
+
+management:
+  security:
+    enabled: false #actuator rest 不用鉴权

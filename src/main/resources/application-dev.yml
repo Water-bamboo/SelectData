@@ -26,7 +26,3 @@ logging:
       org.hibernate: info
       com.zaxxer.hikari: debug
   file: logs/selectdata-dev.log
-
-management:
-  security:
-    enabled: false #actuator rest 不用鉴权
